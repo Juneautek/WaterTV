@@ -1,1 +1,234 @@
+# File: package.json
+{
+  "name": "youtube-live-feed",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^13.4.0",
+    "@testing-library/user-event": "^13.5.0",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-scripts": "5.0.1",
+    "lucide-react": "^0.263.1",
+    "web-vitals": "^2.1.4"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject"
+  },
+  "eslintConfig": {
+    "extends": ["react-app"]
+  },
+  "browserslist": {
+    "production": [">0.2%", "not dead", "not op_mini all"],
+    "development": ["last 1 chrome version", "last 1 firefox version", "last 1 safari version"]
+  }
+}
 
+# File: src/App.js
+import React from 'react';
+import VideoApp from './components/VideoApp';
+
+function App() {
+  return (
+    <div className="App">
+      <VideoApp />
+    </div>
+  );
+}
+
+export default App;
+
+# File: src/components/VideoApp.js
+import React, { useState, useEffect } from 'react';
+import { AlertCircle, Shuffle, Timer } from 'lucide-react';
+
+const VideoApp = () => {
+  // Your YouTube playlist ID
+  const playlistId = 'PLqBvKv8OhaTiRKMZiTVfEDT0ZTzzDSOeg';
+  const SHUFFLE_INTERVAL = 5 * 60 * 1000; // 5 minutes in milliseconds
+  
+  const [randomIndex, setRandomIndex] = useState(0);
+  const [timeUntilNext, setTimeUntilNext] = useState(SHUFFLE_INTERVAL);
+  const [showAlert, setShowAlert] = useState(true);
+
+  const getRandomIndex = () => {
+    return Math.floor(Math.random() * 100);
+  };
+
+  const getEmbedUrl = () => {
+    return `https://www.youtube.com/embed?listType=playlist&list=${playlistId}&index=${randomIndex}&autoplay=1&mute=1`;
+  };
+
+  useEffect(() => {
+    const shuffleInterval = setInterval(() => {
+      setRandomIndex(getRandomIndex());
+    }, SHUFFLE_INTERVAL);
+
+    const countdownInterval = setInterval(() => {
+      setTimeUntilNext(prev => {
+        if (prev <= 1000) return SHUFFLE_INTERVAL;
+        return prev - 1000;
+      });
+    }, 1000);
+
+    return () => {
+      clearInterval(shuffleInterval);
+      clearInterval(countdownInterval);
+    };
+  }, []);
+
+  const formatTimeRemaining = () => {
+    const minutes = Math.floor(timeUntilNext / (60 * 1000));
+    const seconds = Math.floor((timeUntilNext % (60 * 1000)) / 1000);
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-900 text-white p-4">
+      <div className="max-w-6xl mx-auto">
+        {showAlert && (
+          <div className="mb-6 bg-blue-900/50 border border-blue-500 rounded-lg p-4 flex items-start gap-2">
+            <AlertCircle className="h-5 w-5 text-blue-400 shrink-0 mt-0.5" />
+            <p className="text-sm text-white">
+              Live camera feeds will automatically shuffle every 5 minutes. You can manually shuffle using the button below.
+              <button 
+                onClick={() => setShowAlert(false)}
+                className="ml-2 text-blue-400 hover:text-blue-300"
+              >
+                Dismiss
+              </button>
+            </p>
+          </div>
+        )}
+
+        <div className="bg-gray-800 rounded-lg overflow-hidden border border-gray-700">
+          <div className="aspect-video bg-black">
+            <iframe
+              src={getEmbedUrl()}
+              className="w-full h-full"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+              key={randomIndex}
+            />
+          </div>
+        </div>
+
+        <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-2 bg-gray-800 px-4 py-2 rounded-lg border border-gray-700">
+            <Timer className="h-5 w-5 text-blue-400" />
+            <span className="text-sm font-medium">
+              Next shuffle in: {formatTimeRemaining()}
+            </span>
+          </div>
+
+          <button 
+            onClick={() => {
+              setRandomIndex(getRandomIndex());
+              setTimeUntilNext(SHUFFLE_INTERVAL);
+            }}
+            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 
+                       transition-colors px-6 py-2 rounded-lg font-medium w-full sm:w-auto justify-center"
+          >
+            <Shuffle className="h-5 w-5" />
+            <span>Shuffle Now</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default VideoApp;
+
+# File: src/index.js
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import './index.css';
+import App from './App';
+
+const root = ReactDOM.createRoot(document.getElementById('root'));
+root.render(
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
+);
+
+# File: src/index.css
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+# File: tailwind.config.js
+module.exports = {
+  content: [
+    "./src/**/*.{js,jsx,ts,tsx}",
+  ],
+  theme: {
+    extend: {},
+  },
+  plugins: [],
+}
+
+# File: .gitignore
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# File: README.md
+# YouTube Live Feed Player
+
+A React application that displays a YouTube playlist with automatic shuffling and controls.
+
+## Features
+- Automatically shuffles videos every 5 minutes
+- Manual shuffle button
+- Countdown timer
+- Dark theme
+- Responsive design
+- Dismissible information alert
+
+## Setup
+1. Clone this repository
+2. Install dependencies: `npm install`
+3. Start development server: `npm start`
+4. Build for production: `npm run build`
+
+## Configuration
+- The YouTube playlist ID is configured in `src/components/VideoApp.js`
+- Current playlist: PLqBvKv8OhaTiRKMZiTVfEDT0ZTzzDSOeg
+
+## Dependencies
+- React
+- Tailwind CSS
+- Lucide React (for icons)
